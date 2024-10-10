@@ -52,16 +52,16 @@ impl SolverContext {
         self.graph.invalidate(v);
         // Remove vertex from color set and get its color
         let color = self.remove(v);
-        for n in self.graph.neighbors[v.0].0.iter() {
+        for n in self.graph.neighbors[v].iter().copied() {
             match color {
-                Color::White => self.white_neighbors[n.0] -= 1,
-                Color::Black => self.black_neighbors[n.0] -= 1,
+                Color::White => self.white_neighbors[n] -= 1,
+                Color::Black => self.black_neighbors[n] -= 1,
             }
-            self.black.remove(*n);
-            let was_black = self.white.insert(*n);
+            self.black.remove(n);
+            let was_black = self.white.insert(n);
             if was_black {
-                for n2 in self.graph.neighbors[n.0].0.iter() {
-                    self.white_neighbors[n2.0] += 1;
+                for n2 in self.graph.neighbors[n].iter().copied() {
+                    self.white_neighbors[n2] += 1;
                 }
             }
         }
@@ -71,11 +71,11 @@ impl SolverContext {
         self.solution.remove(v);
         self.black.insert(v);
         self.graph.revalidate(v);
-        for n in self.graph.neighbors[v.0].0.iter() {
-            self.black.insert(*n);
-            self.white.remove(*n);
-            for n2 in self.graph.neighbors[n.0].0.iter() {
-                self.white_neighbors[n2.0] -= 1;
+        for n in self.graph.neighbors[v].iter().copied() {
+            self.black.insert(n);
+            self.white.remove(n);
+            for n2 in self.graph.neighbors[n].iter().copied() {
+                self.white_neighbors[n2] -= 1;
             }
         }
     }
@@ -98,6 +98,6 @@ impl SolverContext {
         match color {
             Color::White => self.white.insert(v),
             Color::Black => self.black.insert(v),
-        }
+        };
     }
 }

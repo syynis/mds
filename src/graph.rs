@@ -2,16 +2,10 @@ use std::collections::HashMap;
 
 use crate::fastset::DenseFastSet;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Vertex(pub usize);
-impl From<Vertex> for usize {
-    fn from(value: Vertex) -> Self {
-        value.0
-    }
-}
+pub type Vertex = usize;
+pub type Adjacency = Vec<Vertex>;
 
-pub struct Adjacency(pub Vec<Vertex>);
-
+#[derive(Debug)]
 pub struct Graph {
     valid: DenseFastSet<Vertex>,
     pub neighbors: Vec<Adjacency>,
@@ -34,17 +28,17 @@ impl Graph {
     pub fn add_edge(&mut self, v: Vertex, u: Vertex) {
         debug_assert!(self.is_valid(v));
         debug_assert!(self.is_valid(u));
-        self.neighbors[v.0].0.push(u);
-        self.neighbors[u.0].0.push(v);
+        self.neighbors[v].push(u);
+        self.neighbors[u].push(v);
     }
 
     pub fn has_edge(&self, v: Vertex, u: Vertex) -> bool {
         debug_assert!(self.is_valid(v));
         debug_assert!(self.is_valid(u));
-        if self.neighbors[v.0].0.len() < self.neighbors[u.0].0.len() {
-            self.neighbors[v.0].0.iter().any(|&n| n == u)
+        if self.neighbors[v].len() < self.neighbors[u].len() {
+            self.neighbors[v].iter().any(|&n| n == u)
         } else {
-            self.neighbors[u.0].0.iter().any(|&n| n == v)
+            self.neighbors[u].iter().any(|&n| n == v)
         }
     }
 

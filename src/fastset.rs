@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+#[derive(Debug)]
 pub struct FastSet<T: Into<usize> + Copy> {
     set: Vec<usize>,
     generation: usize,
@@ -41,6 +42,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct DenseFastSet<T: Into<usize> + Copy> {
     dense: Vec<T>,
     sparse: Vec<Option<usize>>,
