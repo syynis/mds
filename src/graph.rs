@@ -3,36 +3,30 @@ use std::collections::HashMap;
 use crate::fastset::DenseFastSet;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Vertex(usize);
+pub struct Vertex(pub usize);
 impl From<Vertex> for usize {
     fn from(value: Vertex) -> Self {
         value.0
     }
 }
 
-pub struct Adjacency(Vec<Vertex>);
-
-pub enum VertexKind {
-    Black,
-    White,
-}
+pub struct Adjacency(pub Vec<Vertex>);
 
 pub struct Graph {
     valid: DenseFastSet<Vertex>,
-    neighbors: Vec<Adjacency>,
-    kinds: Vec<VertexKind>,
+    pub neighbors: Vec<Adjacency>,
     names: Vec<String>,
     id_name_map: HashMap<String, usize>,
     num_vertices: u32,
 }
 
 impl Graph {
-    pub fn invalidate_vertex(&mut self, v: Vertex) {
+    pub fn invalidate(&mut self, v: Vertex) {
         self.valid.remove(v);
         self.num_vertices -= 1;
     }
 
-    pub fn revalidate_vertex(&mut self, v: Vertex) {
+    pub fn revalidate(&mut self, v: Vertex) {
         self.valid.insert(v);
         self.num_vertices += 1;
     }

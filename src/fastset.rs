@@ -70,21 +70,24 @@ where
         false
     }
 
-    pub fn remove(&mut self, key: T) {
+    pub fn remove(&mut self, key: T) -> bool {
         if let Some(dense_idx) = self.dense_idx(key) {
             let back = (*self.dense.last().unwrap()).into();
             let removed = self.dense.swap_remove(dense_idx);
             self.sparse[back] = Some(dense_idx);
             self.sparse[removed.into()] = None;
+            true
+        } else {
+            false
         }
     }
 
     pub fn contains(&self, key: T) -> bool {
-        self.sparse[key.into()].is_some()
+        self.dense_idx(key).is_some()
     }
 
     pub fn dense_idx(&self, key: T) -> Option<usize> {
-        self.sparse.get(key.into()).cloned().flatten()
+        self.sparse[key.into()]
     }
 
     pub fn clear(&mut self) {
