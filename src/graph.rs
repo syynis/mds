@@ -45,4 +45,8 @@ impl Graph {
     pub fn is_valid(&self, v: Vertex) -> bool {
         self.valid.contains(v)
     }
+
+    pub fn size(&self) -> usize {
+        self.num_vertices as usize
+    }
 }
