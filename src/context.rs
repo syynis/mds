@@ -87,17 +87,17 @@ impl SolverContext {
         self.graph.invalidate(v);
         // Remove vertex from color set and get its color
         let color = self.remove_color(v);
-        for n in &self.graph.neighbors[v] {
+        for n in self.graph.neighbors(v) {
             match color {
-                Color::White => self.white_neighbors[*n] -= 1,
-                Color::Black => self.black_neighbors[*n] -= 1,
+                Color::White => self.white_neighbors[n] -= 1,
+                Color::Black => self.black_neighbors[n] -= 1,
             }
-            self.dom_amount[*n] += 1;
-            self.black.remove(*n);
-            let was_black = self.white.insert(*n);
+            self.dom_amount[n] += 1;
+            self.black.remove(n);
+            let was_black = self.white.insert(n);
             if was_black {
-                for n2 in &self.graph.neighbors[*n] {
-                    self.white_neighbors[*n2] += 1;
+                for n2 in self.graph.neighbors(n) {
+                    self.white_neighbors[n2] += 1;
                 }
             }
         }
@@ -112,12 +112,12 @@ impl SolverContext {
         self.solution.remove(v);
         self.black.insert(v);
         self.graph.revalidate(v);
-        for n in &self.graph.neighbors[v] {
-            self.dom_amount[*n] -= 1;
-            self.black.insert(*n);
-            self.white.remove(*n);
-            for n2 in &self.graph.neighbors[*n] {
-                self.white_neighbors[*n2] -= 1;
+        for n in self.graph.neighbors(v) {
+            self.dom_amount[n] -= 1;
+            self.black.insert(n);
+            self.white.remove(n);
+            for n2 in self.graph.neighbors(n) {
+                self.white_neighbors[n2] -= 1;
             }
         }
     }
@@ -131,8 +131,8 @@ impl SolverContext {
             Color::White => {
                 self.white.remove(v);
                 self.graph.invalidate(v);
-                for n in &self.graph.neighbors[v] {
-                    self.white_neighbors[*n] -= 1;
+                for n in self.graph.neighbors(v) {
+                    self.white_neighbors[n] -= 1;
                 }
             }
             Color::Black => self.excluded.insert(v),

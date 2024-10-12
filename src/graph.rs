@@ -49,4 +49,8 @@ impl Graph {
     pub fn size(&self) -> usize {
         self.num_vertices as usize
     }
+
+    pub fn neighbors(&self, v: Vertex) -> impl Iterator<Item = Vertex> + '_ {
+        self.neighbors[v].iter().copied()
+    }
 }
