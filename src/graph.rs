@@ -7,7 +7,7 @@ pub type Adjacency = Vec<Vertex>;
 
 #[derive(Debug)]
 pub struct Graph {
-    valid: DenseFastSet<Vertex>,
+    pub valid: DenseFastSet<Vertex>,
     pub neighbors: Vec<Adjacency>,
     names: Vec<String>,
     id_name_map: HashMap<String, usize>,

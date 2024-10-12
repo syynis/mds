@@ -25,7 +25,7 @@ pub struct Operation {
 
 #[derive(Debug)]
 pub struct SolverContext {
-    graph: Graph,
+    pub graph: Graph,
     operations: Vec<Operation>,
     solution: DenseFastSet<Vertex>,
     /// Vertices that are already dominated
