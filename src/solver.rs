@@ -17,7 +17,13 @@ impl Solver {
         else {
             return;
         };
-
-        for n in self.context.graph.neighbors(candidate) {}
+        let candidates = self.context.graph.neighbors[candidate].clone();
+        for n in candidates {
+            let time = self.context.history.len();
+            self.context.select(n);
+            self.branch();
+            self.context.rollback(time);
+            self.context.exclude(n);
+        }
     }
 }

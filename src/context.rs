@@ -26,7 +26,7 @@ pub struct Operation {
 #[derive(Debug)]
 pub struct SolverContext {
     pub graph: Graph,
-    operations: Vec<Operation>,
+    pub history: Vec<Operation>,
     solution: DenseFastSet<Vertex>,
     /// Vertices that are already dominated
     white: DenseFastSet<Vertex>,
@@ -47,7 +47,7 @@ impl SolverContext {
         let size = graph.size();
         Self {
             graph,
-            operations: Vec::default(),
+            history: Vec::default(),
             solution: DenseFastSet::new(size),
             white: DenseFastSet::new(size),
             black: DenseFastSet::new(size),
@@ -101,7 +101,7 @@ impl SolverContext {
                 }
             }
         }
-        self.operations.push(Operation {
+        self.history.push(Operation {
             v,
             color,
             kind: OperationKind::Select,
@@ -137,7 +137,7 @@ impl SolverContext {
             }
             Color::Black => self.excluded.insert(v),
         };
-        self.operations.push(Operation {
+        self.history.push(Operation {
             v,
             color,
             kind: OperationKind::Exclude,
@@ -150,5 +150,19 @@ impl SolverContext {
             Color::White => self.white.insert(v),
             Color::Black => self.black.insert(v),
         };
+    }
+
+    pub fn rollback(&mut self, time: usize) {
+        while let Some(op) = self.history.pop() {
+            match op.kind {
+                OperationKind::Select => self.undo_select(op.v, op.color),
+                OperationKind::Exclude => self.undo_exclude(op.v, op.color),
+                OperationKind::Ignore => todo!(),
+            }
+
+            if self.history.len() == time {
+                break;
+            }
+        }
     }
 }
