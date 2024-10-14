@@ -29,6 +29,13 @@ where
         res
     }
 
+    /// Removes element from set
+    /// NOTE If this is called `usize::MAX` times without inserting this key once
+    /// this will lead to contains returning `true`
+    pub fn remove(&mut self, key: T) -> bool {
+        self.set[key.into()] = self.generation.wrapping_sub(1);
+    }
+
     pub fn contains(&self, key: T) -> bool {
         self.set[key.into()] == self.generation
     }

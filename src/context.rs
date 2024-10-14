@@ -60,6 +60,16 @@ impl SolverContext {
     }
 
     /// Remove vertex from its color set and return color it belonged to
+    pub fn add_color(&mut self, v: Vertex, color: Color) {
+        assert!(!self.black.contains(v));
+        assert!(!self.white.contains(v));
+        match color {
+            Color::White => self.white.insert_unchecked(color),
+            Color::Black => self.black.insert_unchecked(color),
+        }
+    }
+
+    /// Remove vertex from its color set and return color it belonged to
     pub fn remove_color(&mut self, v: Vertex) -> Color {
         assert!(self.black.contains(v) != self.white.contains(v));
         if self.black.remove(v) {
@@ -69,6 +79,7 @@ impl SolverContext {
             Color::White
         }
     }
+
     /// Return color of vertex
     pub fn get_color(&mut self, v: Vertex) -> Color {
         assert!(self.black.contains(v) != self.white.contains(v));
@@ -83,7 +94,7 @@ impl SolverContext {
     pub fn select(&mut self, v: Vertex) {
         assert!(!self.excluded.contains(v));
         assert!(!self.solution.contains(v));
-        self.solution.insert(v);
+        self.solution.insert_unchecked(v);
         self.graph.invalidate(v);
         // Remove vertex from color set and get its color
         let color = self.remove_color(v);
@@ -93,9 +104,13 @@ impl SolverContext {
                 Color::Black => self.black_neighbors[n] -= 1,
             }
             self.dom_amount[n] += 1;
-            self.black.remove(n);
-            let was_black = self.white.insert(n);
-            if was_black {
+            assert!(self.dom_amount[n] > 0);
+            // If dominated for the first time change vertex color from black to white
+            if self.dom_amount == 1 {
+                assert!(self.black.contains(n));
+                assert!(!self.white.contains(n));
+                self.black.remove(n);
+                self.white.insert_unchecked(n);
                 for n2 in self.graph.neighbors(n) {
                     self.white_neighbors[n2] += 1;
                 }
@@ -110,14 +125,23 @@ impl SolverContext {
 
     pub fn undo_select(&mut self, v: Vertex, color: Color) {
         self.solution.remove(v);
-        self.black.insert(v);
         self.graph.revalidate(v);
+        self.add_color(v, color);
         for n in self.graph.neighbors(v) {
+            match color {
+                Color::White => self.white_neighbors[n] += 1,
+                Color::Black => self.black_neighbors[n] += 1,
+            }
+            assert!(self.dom_amount[n] > 0);
             self.dom_amount[n] -= 1;
-            self.black.insert(n);
-            self.white.remove(n);
-            for n2 in self.graph.neighbors(n) {
-                self.white_neighbors[n2] -= 1;
+            if self.dom_amount == 0 {
+                assert!(!self.black.contains(n));
+                assert!(self.white.contains(n));
+                self.black.insert(n);
+                self.white.remove(n);
+                for n2 in self.graph.neighbors(n) {
+                    self.white_neighbors[n2] -= 1;
+                }
             }
         }
     }
@@ -146,6 +170,16 @@ impl SolverContext {
 
     pub fn undo_exclude(&mut self, v: Vertex, color: Color) {
         self.graph.revalidate(v);
+        match color {
+            Color::White => {
+                self.white.insert_unchecked(v);
+                self.graph.revalidate(v);
+                for n in self.graph.neighbors(v) {
+                    self.white_neighbors[n] += 1;
+                }
+            }
+            Color::Black => self.excluded.remove(v),
+        }
         match color {
             Color::White => self.white.insert(v),
             Color::Black => self.black.insert(v),
