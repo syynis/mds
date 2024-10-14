@@ -3,7 +3,7 @@ use crate::{
     graph::{Graph, Vertex},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Color {
     White,
     Black,
@@ -64,8 +64,8 @@ impl SolverContext {
         assert!(!self.black.contains(v));
         assert!(!self.white.contains(v));
         match color {
-            Color::White => self.white.insert_unchecked(color),
-            Color::Black => self.black.insert_unchecked(color),
+            Color::White => self.white.insert_unchecked(v),
+            Color::Black => self.black.insert_unchecked(v),
         }
     }
 
@@ -106,7 +106,7 @@ impl SolverContext {
             self.dom_amount[n] += 1;
             assert!(self.dom_amount[n] > 0);
             // If dominated for the first time change vertex color from black to white
-            if self.dom_amount == 1 {
+            if self.dom_amount[n] == 1 {
                 assert!(self.black.contains(n));
                 assert!(!self.white.contains(n));
                 self.black.remove(n);
@@ -134,7 +134,7 @@ impl SolverContext {
             }
             assert!(self.dom_amount[n] > 0);
             self.dom_amount[n] -= 1;
-            if self.dom_amount == 0 {
+            if self.dom_amount[n] == 0 {
                 assert!(!self.black.contains(n));
                 assert!(self.white.contains(n));
                 self.black.insert(n);
@@ -178,7 +178,9 @@ impl SolverContext {
                     self.white_neighbors[n] += 1;
                 }
             }
-            Color::Black => self.excluded.remove(v),
+            Color::Black => {
+                self.excluded.remove(v);
+            }
         }
         match color {
             Color::White => self.white.insert(v),
