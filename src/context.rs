@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::{
     fastset::{DenseFastSet, FastSet},
     graph::{Graph, Vertex},
@@ -30,8 +32,6 @@ pub struct SolverContext {
     solution: DenseFastSet<Vertex>,
     /// Vertices that are already dominated
     white: DenseFastSet<Vertex>,
-    /// Vertices that are not dominated
-    black: DenseFastSet<Vertex>,
     /// Vertices that can't belong to solution, but need to be dominated
     excluded: FastSet<Vertex>,
     /// How many vertices in neighborhood that need to be dominated
@@ -45,15 +45,15 @@ pub struct SolverContext {
 impl SolverContext {
     pub fn new(graph: Graph) -> Self {
         let size = graph.size();
+        let mut black_neighbors = graph.neighbors.iter().map(|n| n.len() as u32).collect_vec();
         Self {
             graph,
             history: Vec::default(),
             solution: DenseFastSet::new(size),
             white: DenseFastSet::new(size),
-            black: DenseFastSet::new(size),
             excluded: FastSet::new(size),
             // TODO intialize these properly
-            black_neighbors: vec![0; size],
+            black_neighbors,
             white_neighbors: vec![0; size],
             dom_amount: vec![0; size],
         }
@@ -61,32 +61,27 @@ impl SolverContext {
 
     /// Remove vertex from its color set and return color it belonged to
     pub fn add_color(&mut self, v: Vertex, color: Color) {
-        assert!(!self.black.contains(v));
         assert!(!self.white.contains(v));
-        match color {
-            Color::White => self.white.insert_unchecked(v),
-            Color::Black => self.black.insert_unchecked(v),
+        if let Color::White = color {
+            self.white.insert_unchecked(v)
         }
     }
 
     /// Remove vertex from its color set and return color it belonged to
     pub fn remove_color(&mut self, v: Vertex) -> Color {
-        assert!(self.black.contains(v) != self.white.contains(v));
-        if self.black.remove(v) {
-            Color::Black
-        } else {
-            self.white.remove(v);
+        if self.white.remove(v) {
             Color::White
+        } else {
+            Color::Black
         }
     }
 
     /// Return color of vertex
     pub fn get_color(&mut self, v: Vertex) -> Color {
-        assert!(self.black.contains(v) != self.white.contains(v));
-        if self.black.contains(v) {
-            Color::Black
-        } else {
+        if self.white.contains(v) {
             Color::White
+        } else {
+            Color::Black
         }
     }
 
@@ -107,9 +102,7 @@ impl SolverContext {
             assert!(self.dom_amount[n] > 0);
             // If dominated for the first time change vertex color from black to white
             if self.dom_amount[n] == 1 {
-                assert!(self.black.contains(n));
                 assert!(!self.white.contains(n));
-                self.black.remove(n);
                 self.white.insert_unchecked(n);
                 for n2 in self.graph.neighbors(n) {
                     self.white_neighbors[n2] += 1;
@@ -135,9 +128,7 @@ impl SolverContext {
             assert!(self.dom_amount[n] > 0);
             self.dom_amount[n] -= 1;
             if self.dom_amount[n] == 0 {
-                assert!(!self.black.contains(n));
                 assert!(self.white.contains(n));
-                self.black.insert(n);
                 self.white.remove(n);
                 for n2 in self.graph.neighbors(n) {
                     self.white_neighbors[n2] -= 1;
@@ -182,10 +173,6 @@ impl SolverContext {
                 self.excluded.remove(v);
             }
         }
-        match color {
-            Color::White => self.white.insert(v),
-            Color::Black => self.black.insert(v),
-        };
     }
 
     pub fn rollback(&mut self, time: usize) {
@@ -199,6 +186,23 @@ impl SolverContext {
             if self.history.len() == time {
                 break;
             }
+        }
+    }
+}
+
+mod tests {
+    use super::*;
+    #[test]
+    fn select() {
+        let edges = "4\n0 1\n1 2\n2 3\n3 0\n";
+        let graph = Graph::new_from_edges(edges.to_string());
+        let mut context = SolverContext::new(graph);
+        let v = 0;
+        context.select(v);
+        assert!(context.solution.contains(v));
+        assert!(!context.graph.is_valid(v));
+        for n in &context.graph.neighbors[v] {
+            assert!(context.white.contains(*n));
         }
     }
 }

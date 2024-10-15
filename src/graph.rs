@@ -17,28 +17,27 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn new_from_file(file: &Path) -> Self {
-        let content = read_to_string(file).unwrap();
+    pub fn new_from_edges(content: String) -> Self {
         let lines = content.lines().collect_vec();
-        let num_vertices = lines[0].parse::<usize>().unwrap();
+        let num_vertices = lines[0].trim().parse::<usize>().unwrap();
         let mut current_vertex = 0;
 
         let mut names = Vec::with_capacity(num_vertices);
         let mut id_name_map: HashMap<String, usize> = HashMap::with_capacity(num_vertices);
         let mut neighbors = vec![Vec::new(); num_vertices];
         for i in 1..lines.len() {
-            let edge = lines[i].split(' ').collect_vec();
+            let edge = lines[i].trim().split(' ').collect_vec();
             assert!(edge.len() == 2);
             let v = *id_name_map.entry(edge[0].to_owned()).or_insert_with(|| {
                 names.push(edge[0].to_owned());
-                current_vertex
+                current_vertex += 1;
+                current_vertex - 1
             });
-            current_vertex += 1;
             let u = *id_name_map.entry(edge[1].to_owned()).or_insert_with(|| {
                 names.push(edge[1].to_owned());
-                current_vertex
+                current_vertex += 1;
+                current_vertex - 1
             });
-            current_vertex += 1;
             neighbors[v].push(u);
             neighbors[u].push(v);
         }
@@ -50,6 +49,11 @@ impl Graph {
             id_name_map,
             num_vertices,
         }
+    }
+
+    pub fn new_from_file(file: &Path) -> Self {
+        let content = read_to_string(file).unwrap();
+        Self::new_from_edges(content)
     }
 
     pub fn invalidate(&mut self, v: Vertex) {
