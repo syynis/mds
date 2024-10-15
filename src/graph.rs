@@ -25,8 +25,8 @@ impl Graph {
         let mut names = Vec::with_capacity(num_vertices);
         let mut id_name_map: HashMap<String, usize> = HashMap::with_capacity(num_vertices);
         let mut neighbors = vec![Vec::new(); num_vertices];
-        for i in 1..lines.len() {
-            let edge = lines[i].trim().split(' ').collect_vec();
+        for line in lines.iter().skip(1) {
+            let edge = line.trim().split(' ').collect_vec();
             assert!(edge.len() == 2);
             let v = *id_name_map.entry(edge[0].to_owned()).or_insert_with(|| {
                 names.push(edge[0].to_owned());
@@ -88,7 +88,7 @@ impl Graph {
     }
 
     pub fn size(&self) -> usize {
-        self.num_vertices as usize
+        self.num_vertices
     }
 
     pub fn neighbors(&self, v: Vertex) -> impl Iterator<Item = Vertex> + '_ {

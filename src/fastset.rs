@@ -15,7 +15,7 @@ where
         Self {
             set: vec![0; size],
             generation: 1,
-            phantom: PhantomData::default(),
+            phantom: PhantomData,
         }
     }
 
@@ -106,5 +106,9 @@ where
 
     pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
         self.dense.iter().copied()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.dense.is_empty()
     }
 }

@@ -45,7 +45,7 @@ pub struct SolverContext {
 impl SolverContext {
     pub fn new(graph: Graph) -> Self {
         let size = graph.size();
-        let mut black_neighbors = graph.neighbors.iter().map(|n| n.len() as u32).collect_vec();
+        let black_neighbors = graph.neighbors.iter().map(|n| n.len() as u32).collect_vec();
         Self {
             graph,
             history: Vec::default(),
@@ -197,12 +197,30 @@ mod tests {
         let edges = "4\n0 1\n1 2\n2 3\n3 0\n";
         let graph = Graph::new_from_edges(edges.to_string());
         let mut context = SolverContext::new(graph);
+        [0, 2].iter().for_each(|&v| {
+            context.select(v);
+            assert!(context.solution.contains(v));
+            assert!(!context.graph.is_valid(v));
+            for n in &context.graph.neighbors[v] {
+                assert!(context.white.contains(*n));
+            }
+        });
+
+        [1, 3].iter().for_each(|&v| {
+            assert!(context.dom_amount[v] == 2);
+        });
+    }
+
+    #[test]
+    fn undo_select() {
+        let edges = "4\n0 1\n1 2\n2 3\n3 0\n";
+        let graph = Graph::new_from_edges(edges.to_string());
+        let mut context = SolverContext::new(graph);
         let v = 0;
         context.select(v);
-        assert!(context.solution.contains(v));
-        assert!(!context.graph.is_valid(v));
-        for n in &context.graph.neighbors[v] {
-            assert!(context.white.contains(*n));
-        }
+        context.undo_select(v, Color::Black);
+        assert!(context.solution.is_empty());
+        assert!(context.white.is_empty());
+        assert!(context.white_neighbors.iter().all(|&wn| wn == 0));
     }
 }
