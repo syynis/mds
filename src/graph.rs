@@ -21,7 +21,7 @@ impl Graph {
         let lines = content.lines().collect_vec();
         let num_vertices = lines[0].trim().parse::<usize>().unwrap();
         let mut current_vertex = 0;
-
+        let mut valid = DenseFastSet::new(num_vertices);
         let mut names = Vec::with_capacity(num_vertices);
         let mut id_name_map: HashMap<String, usize> = HashMap::with_capacity(num_vertices);
         let mut neighbors = vec![Vec::new(); num_vertices];
@@ -30,11 +30,13 @@ impl Graph {
             assert!(edge.len() == 2);
             let v = *id_name_map.entry(edge[0].to_owned()).or_insert_with(|| {
                 names.push(edge[0].to_owned());
+                valid.insert_unchecked(current_vertex);
                 current_vertex += 1;
                 current_vertex - 1
             });
             let u = *id_name_map.entry(edge[1].to_owned()).or_insert_with(|| {
                 names.push(edge[1].to_owned());
+                valid.insert_unchecked(current_vertex);
                 current_vertex += 1;
                 current_vertex - 1
             });
@@ -43,7 +45,7 @@ impl Graph {
         }
 
         Self {
-            valid: DenseFastSet::new(num_vertices),
+            valid,
             neighbors,
             names,
             id_name_map,
@@ -93,5 +95,12 @@ impl Graph {
 
     pub fn neighbors(&self, v: Vertex) -> impl Iterator<Item = Vertex> + '_ {
         self.neighbors[v].iter().copied()
+    }
+
+    pub fn valid_neighbors(&self, v: Vertex) -> impl Iterator<Item = Vertex> + '_ {
+        self.neighbors[v]
+            .iter()
+            .copied()
+            .filter(|n| self.is_valid(*n))
     }
 }

@@ -29,9 +29,9 @@ pub struct Operation {
 pub struct SolverContext {
     pub graph: Graph,
     pub history: Vec<Operation>,
-    solution: DenseFastSet<Vertex>,
+    pub solution: DenseFastSet<Vertex>,
     /// Vertices that are already dominated
-    white: DenseFastSet<Vertex>,
+    pub white: DenseFastSet<Vertex>,
     /// Vertices that can't belong to solution, but need to be dominated
     excluded: FastSet<Vertex>,
     /// How many vertices in neighborhood that need to be dominated
@@ -188,15 +188,24 @@ impl SolverContext {
             }
         }
     }
+
+    pub fn is_dominated(&self) -> bool {
+        (0..self.graph.neighbors.len()).all(|v| self.solution.contains(v) || self.dom_amount[v] > 0)
+    }
 }
 
 mod tests {
     use super::*;
-    #[test]
-    fn select() {
+
+    fn four_cycle() -> Graph {
         let edges = "4\n0 1\n1 2\n2 3\n3 0\n";
         let graph = Graph::new_from_edges(edges.to_string());
-        let mut context = SolverContext::new(graph);
+        graph
+    }
+
+    #[test]
+    fn select() {
+        let mut context = SolverContext::new(four_cycle());
         [0, 2].iter().for_each(|&v| {
             context.select(v);
             assert!(context.solution.contains(v));
@@ -213,9 +222,7 @@ mod tests {
 
     #[test]
     fn undo_select() {
-        let edges = "4\n0 1\n1 2\n2 3\n3 0\n";
-        let graph = Graph::new_from_edges(edges.to_string());
-        let mut context = SolverContext::new(graph);
+        let mut context = SolverContext::new(four_cycle());
         let v = 0;
         context.select(v);
         context.undo_select(v, Color::Black);

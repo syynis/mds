@@ -111,4 +111,8 @@ where
     pub fn is_empty(&self) -> bool {
         self.dense.is_empty()
     }
+
+    pub fn size(&self) -> usize {
+        self.dense.len()
+    }
 }
